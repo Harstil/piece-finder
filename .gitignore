@@ -1,0 +1,22 @@
+node_modules/
+dist/
+dev-dist/
+*.local
+.vercel/
+
+# generated data and downloaded sources (regenerable from seeds / fetch scripts)
+datasets/
+tools/synth/sources/
+tools/train/runs/
+eval/reports/*.json
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
