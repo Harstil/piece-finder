@@ -77,6 +77,32 @@ The reference corners are the ground truth for the auto-quad detector; the app i
 Pieces that are face-down, or less than 60 % visible, are still in the mask but are excluded from matching
 metrics (`faceUp: false` or `visibleFraction < 0.6`).
 
+## Precise definitions
+These pin down what the examples above leave open. `node eval/check-dataset.ts datasets/<name>` checks them
+numerically through the engine's own primitives.
+
+- **Motif area.** Pixel centres are integers, so the motif area is the pixel-*edge* rectangle
+  `[-0.5, W-0.5] × [-0.5, H-0.5]`. `referenceCorners` are its four outer corners, border pieces' corners lie
+  on it, and lattice point (c, r) of a grid cut is `(-0.5 + c·W/cols, -0.5 + r·H/rows)`. This matches
+  `rectToQuadHomography` in `src/engine/geom/warp.ts`, which maps a quad to the output's outer pixel corners.
+- **Clockwise** means clockwise on screen (y down): a positive shoelace sum. Outlines never repeat their first
+  point. The 4 core corners are vertices of the outline.
+- **`upAngleDeg`** is the frame direction of the motif-up vector (motif −y) at the core centre, i.e. at the
+  image of the mean of the 4 motif-space corners, from the motif → frame homography. It is *not* the
+  bottom-edge → top-edge midpoint direction, which differs by up to ~9° on irregular cuts.
+- **Outline vs mask.** `outline` and `corners` describe the printed **top face**. The instance mask covers
+  the top face **plus the visible side wall** (pieces are ~0.1 × core thick; parallax shows the wall on the side
+  facing the camera's nadir). So for a fully visible piece the whole top face is in the mask, but mask/outline
+  IoU is typically 0.86–0.99, not ~1. Segmentation metrics compare against the mask; shape metrics (corner
+  error, side kinds) against `corners` / `outline`.
+- **Face-down pieces** are mirrored: their motif-order corners run counter-clockwise in the image (their
+  `outline` is still clockwise). `upAngleDeg` is still defined, but is meaningless to the user.
+- **`visibleFraction`** = top-face pixels labelled with this piece ÷ top-face pixels of the whole piece
+  (occlusion by later pieces and by the frame edge both count). Mask indices are the 1-based paint order.
+- **Extra fields.** Readers must ignore unknown keys. The generator adds a scene `render` block (corePx,
+  tiltDeg, focalPx, jpegQuality, glare, phoneShadow, exposure, blurSigma, motionBlurPx, noise) and, in
+  reference.json, `referenceKind` (photo | digital | video), `referenceSize`, `piecesNominal`, `motifStyle`.
+
 ## Metrics computed on this format (by `eval/`)
 - matching: top-1 / top-5 cell accuracy, rotation accuracy (|Δ upAngleDeg| < 45°), by piece count and piece type;
 - shape: corner error (px, relative to core side length), side-kind accuracy;

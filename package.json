@@ -16,7 +16,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "eval": "node eval/run.ts"
+    "eval": "node eval/run.ts",
+    "icons": "node scripts/make-icons.ts"
   },
   "dependencies": {
     "comlink": "^4.4.2",

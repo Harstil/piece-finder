@@ -16,7 +16,9 @@
  * - Angles are in degrees, clockwise, measured from "up" in the image (0 = up, 90 = right).
  * - `upAngleDeg` of a piece in a frame = the direction its motif-up vector points in that frame.
  *   0 means the piece already lies the right way up; 90 means its top points to the frame's right,
- *   so the user must turn it 90° counter-clockwise.
+ *   so the user must turn it 90° counter-clockwise. Under perspective the direction varies slightly
+ *   across the piece; it is taken at the core centre (the mean of the 4 corners in motif coordinates).
+ *   For a non-rectangular core (irregular cut) this is NOT the bottom-edge → top-edge midpoint direction.
  */
 
 export interface Point {

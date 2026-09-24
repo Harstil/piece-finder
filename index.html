@@ -1,0 +1,30 @@
+<!doctype html>
+<!--
+  Piece Finder's single page. The meta tags make it behave like an app when added to the iPhone
+  Home Screen: full-bleed under the status bar (viewport-fit=cover + black-translucent, with the UI
+  padding itself by the safe-area insets), dark theme colour, and the app icon. vite-plugin-pwa
+  injects the web manifest link and the service-worker registration at build time.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Piece Finder</title>
+    <meta
+      name="description"
+      content="Point your phone at loose jigsaw pieces and see exactly where each one goes."
+    />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Piece Finder" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+/*
+ * Global styles: Tailwind v4 plus the few app-wide rules Tailwind utilities can't express.
+ *
+ * The app is dark-only and phone-first. Colours come from the app icon (scripts/make-icons.ts):
+ * `ink` is the icon background, `accent` the piece. Screens size themselves with 100dvh and pad by
+ * the safe-area insets (the page runs full-bleed under the iPhone status bar and home indicator,
+ * see index.html), using the `*-safe` utilities below.
+ */
+
+/* Only src/ holds UI code; without source() Tailwind would scan the whole repo (tools, eval, docs). */
+@import 'tailwindcss' source('.');
+
+@theme {
+  --color-ink-950: #0b1020;
+  --color-ink-900: #111831;
+  --color-ink-800: #1a2342;
+  --color-ink-700: #28335a;
+  --color-accent: #f5a524;
+  --color-accent-strong: #ffb938;
+}
+
+/* Safe-area padding with a comfortable minimum where the device has no inset (Android, desktop). */
+@utility pt-safe {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+@utility pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+@utility px-safe {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-ink-950);
+    color: var(--color-slate-100);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    /* No rubber-band scrolling or double-tap zoom: the camera screen is a fixed, full-screen view. */
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+}
