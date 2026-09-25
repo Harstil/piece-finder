@@ -58,7 +58,7 @@ def _puzzle_job(job: dict) -> dict:
     pdir = Path(job["out"]) / "puzzles" / pid
     pdir.mkdir(parents=True, exist_ok=True)
     rng = rng_for(seed, "puzzle", idx)
-    sources = source_motifs() if motifs_mode != "procedural" else []
+    sources = source_motifs(job["split"]) if motifs_mode != "procedural" else []
     if motifs_mode == "sources" and not sources:
         raise SystemExit("--motifs sources: tools/synth/sources/motifs is empty (run fetch_sources.py first)")
     style = "source"
@@ -177,6 +177,7 @@ def main(argv: list[str] | None = None) -> None:
     t0 = time.perf_counter()
     _prepare_out(out)
     pjobs = [{"out": str(out), "seed": args.seed, "index": i, "pieces": args.pieces, "motifs": args.motifs,
+              "split": args.split,
               "cut": args.cut if args.cut != "mixed" else ("grid" if i % 2 == 0 else "irregular")}
              for i in range(args.puzzles)]
     presults = _map(_puzzle_job, pjobs, min(args.workers, args.puzzles))

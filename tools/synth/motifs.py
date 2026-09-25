@@ -15,6 +15,7 @@ sources/manifest.json for provenance). All motifs are returned as uint8 RGB at t
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -39,8 +40,21 @@ STYLE_WEIGHTS = (0.30, 0.22, 0.20, 0.14, 0.14)
 # ----------------------------------------------------------------------------------------------
 
 
-def source_motifs() -> list[tuple[Path, str]]:
-    """(path, provenance) for downloaded artwork, sorted so the choice is deterministic."""
+# Held-out artwork: each downloaded motif belongs to exactly one split, by a stable hash of its file
+# name, so test puzzles never reuse art the engine was tuned (val) or trained (train) on.
+# Shares are a choice, not measured: ~70 % train, ~15 % val, ~15 % test.
+SPLIT_BUCKETS = {"train": range(0, 70), "val": range(70, 85), "test": range(85, 100)}
+
+
+def motif_split(name: str) -> str:
+    bucket = int(hashlib.sha1(name.encode("utf-8")).hexdigest(), 16) % 100
+    return next(split for split, r in SPLIT_BUCKETS.items() if bucket in r)
+
+
+def source_motifs(split: str | None = None) -> list[tuple[Path, str]]:
+    """(path, provenance) for downloaded artwork, sorted so the choice is deterministic.
+
+    With `split`, only the motifs assigned to that split (see SPLIT_BUCKETS)."""
     if not MOTIF_DIR.is_dir():
         return []
     manifest: dict[str, str] = {}
@@ -50,6 +64,8 @@ def source_motifs() -> list[tuple[Path, str]]:
         for item in data.get("motifs", []):
             manifest[item["file"]] = item.get("id", "")
     files = sorted(p for p in MOTIF_DIR.iterdir() if p.suffix.lower() in (".jpg", ".jpeg", ".png"))
+    if split is not None:
+        files = [p for p in files if motif_split(p.name) == split]
     return [(p, manifest.get(p.name) or f"file:{p.name}") for p in files]
 
 
