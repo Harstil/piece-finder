@@ -110,6 +110,18 @@ export interface CanonicalPiece {
   /** 1 where the pixel belongs to the piece (tabs included, blanks excluded). */
   mask: Mask
   shape: PieceShape
+  /**
+   * The same piece at every matching resolution, coarsest first (core `size` 8, 16, 32 px). The
+   * top-level size/margin/lab/mask are the finest of these.
+   */
+  levels: CanonicalLevel[]
+}
+
+export interface CanonicalLevel {
+  size: number
+  margin: number
+  lab: LabImage
+  mask: Mask
 }
 
 /**
@@ -136,7 +148,35 @@ export interface MatchOptions {
   topK?: number
   /** Which cues to use — lets the eval harness run ablations. Default: all enabled. */
   cues?: Partial<Record<CueName, boolean>>
+  /** Override of the fused-score weights (eval harness fitting). Default: match/fusion.ts. */
+  fusion?: Partial<FusionParams>
 }
+
+/** Weights and temperatures that turn cue values into scores and probabilities (match/fusion.ts). */
+export interface FusionParams {
+  /** Masked ZNCC on L (texture). */
+  wLuma: number
+  /** Variance-weighted masked ZNCC on a and b (colour pattern). */
+  wChroma: number
+  /** Penalty per unit of mean-colour distance in ab (colour drift between box print and camera). */
+  wChromaMean: number
+  /** Normalised correlation of gradient vectors (structure, lighting-robust). */
+  wGradient: number
+  /** Penalty on mean/std luminance mismatch (the cheap histogram stand-in). */
+  wStats: number
+  /** Penalty per side whose flat/non-flat kind contradicts the cell's border (soft shape prior). */
+  wShapeMismatch: number
+  /** Piece L std (Lab units) at which luma ZNCC gets its full weight; weaker texture scales it down. */
+  lumaTextureRef: number
+  /** Softmax temperature over final scores. */
+  temperature: number
+  /** Softmax temperature for the coarse per-cell heatmap. */
+  coarseTemperature: number
+  /** Share of probability mass given to the finalists (the true answer can be pruned early). */
+  finalistMass: number
+}
+
+export type Verdict = 'strong' | 'likely' | 'unsure'
 
 export type CueName = 'lumaZncc' | 'chroma' | 'gradient' | 'histogram' | 'shapePrior'
 
@@ -144,6 +184,9 @@ export interface MatchResult {
   candidates: Candidate[]
   pieceType: PieceType
   timingsMs: Record<string, number>
+  verdict: Verdict
+  /** Coarse probability per cell (length cols × rows, sums to ~1) for the candidate heatmap. */
+  heat: Float32Array
 }
 
 /** Summary the UI shows after a reference is built. */

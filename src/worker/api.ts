@@ -1,13 +1,13 @@
 /**
  * The engine worker's API, as seen through Comlink.
  *
- * The UI thread never runs vision code: it captures camera frames as ImageBitmaps and transfers
- * them to the worker (zero-copy), which answers with a FrameResult. This file is the typed seam
- * between the two sides; engine.worker.ts implements it and client.ts calls it. Later phases add
- * methods here (reference building, matching) as they are used.
+ * The UI thread never runs vision code: it hands the worker the box photo once (setPuzzle), then
+ * streams camera frames as transferred ImageBitmaps (zero-copy) and draws the FrameResults it gets
+ * back. This file is the typed seam between the two sides; engine.worker.ts implements it and
+ * client.ts calls it.
  */
 
-import type { FrameResult } from '../engine/types.ts'
+import type { FrameResult, GridSpec, Quad, ReferenceSummary } from '../engine/types.ts'
 
 /** What this phone and browser can do, as seen from inside the worker. */
 export interface CapabilityReport {
@@ -38,11 +38,33 @@ export interface GpuAdapterSummary {
   description: string
 }
 
+/** RGBA pixels (ImageData-compatible), transferred back from the worker. */
+export interface Pixels {
+  width: number
+  height: number
+  data: Uint8ClampedArray
+}
+
+export interface PuzzleInfo {
+  summary: ReferenceSummary
+  /** The box picture straightened to the motif rectangle, for the UI to draw grids and highlights on. */
+  preview: Pixels
+  buildMs: number
+}
+
 export interface EngineApi {
   probe(): Promise<CapabilityReport>
   /**
-   * Process one camera frame. The bitmap must be transferred (it is closed by the worker), so
-   * each frame costs no copy on the UI thread.
+   * Builds the reference model from the box photo (the bitmap is transferred and closed) and starts a
+   * scanning session with the given cells already placed.
+   */
+  setPuzzle(photo: ImageBitmap, corners: Quad, grid: GridSpec, placed: number[]): Promise<PuzzleInfo>
+  setPlaced(cells: number[]): Promise<void>
+  /** Cells of the Region finder's area, or null to switch it off. */
+  setRegion(cells: number[] | null): Promise<void>
+  /**
+   * Process one camera frame. The bitmap must be transferred (it is closed by the worker), so each
+   * frame costs no copy on the UI thread. Without a puzzle it only reports timings.
    */
   processFrame(bitmap: ImageBitmap, frameId: number): Promise<FrameResult>
 }

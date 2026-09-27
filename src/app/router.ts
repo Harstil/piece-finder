@@ -10,16 +10,16 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
-export type Route = 'home' | 'camera-check'
+export type Route = 'home' | 'setup' | 'scan' | 'picture' | 'camera-check'
 
-const ROUTES: readonly Route[] = ['home', 'camera-check']
+const ROUTES: readonly Route[] = ['home', 'setup', 'scan', 'picture', 'camera-check']
 
 function routeFromHistoryState(state: unknown): Route {
   const route = (state as { route?: unknown } | null)?.route
   return ROUTES.find((known) => known === route) ?? 'home'
 }
 
-export function useRoute(): { route: Route; navigate: (to: Route) => void; back: () => void } {
+export function useRoute(): { route: Route; navigate: (to: Route) => void; replace: (to: Route) => void; back: () => void } {
   const [route, setRoute] = useState<Route>('home')
 
   useEffect(() => {
@@ -34,7 +34,12 @@ export function useRoute(): { route: Route; navigate: (to: Route) => void; back:
     setRoute(to)
   }, [])
 
+  const replace = useCallback((to: Route) => {
+    history.replaceState({ route: to }, '')
+    setRoute(to)
+  }, [])
+
   const back = useCallback(() => history.back(), [])
 
-  return { route, navigate, back }
+  return { route, navigate, replace, back }
 }
